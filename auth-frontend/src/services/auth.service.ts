@@ -1,4 +1,5 @@
 import apiClient from "../api/api-client";
+import axios from "axios";
 import type { ApiResponse } from "../types/api.types";
 import {
   type LoginRequest,
@@ -7,7 +8,23 @@ import {
   type RegisterResponseData,
   type ProfileResponseData,
 } from "../types/auth.types";
-import { setAccessToken } from "../auth/token-manager";
+
+export const silentRefresh = async (): Promise<string> => {
+  const response = await axios.post(
+    `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+    {},
+    { withCredentials: true },
+  );
+  return response.data.data.accessToken as string;
+};
+
+export const getProfile = async (): Promise<
+  ApiResponse<ProfileResponseData>
+> => {
+  const response =
+    await apiClient.get<ApiResponse<ProfileResponseData>>("/users/profile");
+  return response.data;
+};
 
 export const registerUser = async (
   data: RegisterRequest,
@@ -16,7 +33,6 @@ export const registerUser = async (
     "/auth/register",
     data,
   );
-
   return response.data;
 };
 
@@ -27,15 +43,9 @@ export const loginUser = async (
     "/auth/login",
     data,
   );
-  setAccessToken(response.data.data.accessToken);
   return response.data;
 };
 
 export const logoutUser = async (): Promise<void> => {
   await apiClient.post("/auth/logout");
-};
-
-export const getProfile = async (): Promise<ApiResponse<ProfileResponseData>> => {
-  const response = await apiClient.get<ApiResponse<ProfileResponseData>>("/users/profile");
-  return response.data;
 };

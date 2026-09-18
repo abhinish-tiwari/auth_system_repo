@@ -5,7 +5,7 @@ import { AppError } from "../utils/app-error";
 
 import { LoginInput, RegisterInput } from "../validators/auth.validator";
 
-import { createRefreshToken, revokeRefreshToken } from "./token.service";
+import { createRefreshToken } from "./token.service";
 
 export const registerUser = async (input: RegisterInput) => {
   const existingUser = await User.findOne({
@@ -59,6 +59,8 @@ export const loginUser = async (input: LoginInput) => {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     },
   };
 };
