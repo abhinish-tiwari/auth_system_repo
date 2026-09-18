@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { loginSchema, registerSchema } from "../validators/auth.validator";
 import { loginUser, registerUser } from "../services/auth.service";
-import { User } from "../models/user.model";
 import { refreshTokenCookieOptions } from "../config/cookie";
+import { AppError } from "../utils/app-error";
 import {
   refreshAccessToken,
   revokeRefreshToken,
@@ -21,7 +21,9 @@ export const register = async (
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: user,
+      data: {
+        user,
+      },
     });
   } catch (error) {
     next(error);
@@ -107,10 +109,17 @@ export const refresh = async (
         accessToken: result.accessToken,
       },
     });
-  } catch {
-    res.status(401).json({
-      success: false,
-      message: "Invalid or expired refresh token",
-    });
+  } catch (error) {
+    res.clearCookie("refreshToken", refreshTokenCookieOptions);
+
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+      return;
+    }
+
+    next(error);
   }
 };

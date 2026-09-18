@@ -3,23 +3,22 @@ import { getProfile } from "../services/auth.service";
 import type { User } from "../types/auth.types";
 import { getApiError } from "../api/api-error";
 import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
+import Loader from "../components/Loader";
 
 const Profile = () => {
-
-  const [userDetails, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: authUser } = useAuth();
+  const [userDetails, setUserDetails] = useState<User | null>(authUser);
+  const [loading, setLoading] = useState(!authUser);
   const [error, setError] = useState("");
-  const { logout } = useAuth();
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const response = await getProfile();
-
-        setUser(response.data);
-      } catch (error) {
-        const apiError = getApiError(error);
-
+        setUserDetails(response.data.user);
+      } catch (err) {
+        const apiError = getApiError(err);
         setError(apiError.message);
       } finally {
         setLoading(false);
@@ -31,54 +30,94 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg text-gray-600">Loading profile...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <Loader message="Loading profile details..." fullScreen />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white px-6 py-4 shadow">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <h1 className="text-xl font-bold">Auth App</h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
 
-          <button
-            onClick={logout}
-            className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="rounded-2xl bg-white p-8 shadow">
-          <h2 className="mb-6 text-2xl font-bold">My Profile</h2>
-
-          {error && <p className="mb-4 text-red-600">{error}</p>}
-
-          {userDetails && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-
-                <p className="text-lg font-medium">{userDetails.name}</p>
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md text-2xl font-bold text-white shadow-inner">
+                {userDetails?.name?.charAt(0).toUpperCase() || "U"}
               </div>
-
               <div>
-                <p className="text-sm text-gray-500">Email</p>
-
-                <p className="text-lg font-medium">{userDetails.email}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">User ID</p>
-
-                <p className="break-all text-sm">{userDetails.id}</p>
+                <h1 className="text-2xl font-bold">{userDetails?.name}</h1>
+                <p className="text-blue-100 text-sm">{userDetails?.email}</p>
               </div>
             </div>
-          )}
+          </div>
+
+          <div className="p-6 sm:p-8">
+            <h2 className="mb-6 text-lg font-semibold text-gray-900">
+              Account Information
+            </h2>
+
+            {error && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            {userDetails && (
+              <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Full Name
+                  </dt>
+                  <dd className="mt-1 text-base font-medium text-gray-900">
+                    {userDetails.name}
+                  </dd>
+                </div>
+
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Email Address
+                  </dt>
+                  <dd className="mt-1 text-base font-medium text-gray-900">
+                    {userDetails.email}
+                  </dd>
+                </div>
+
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 sm:col-span-2">
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    User Identifier (ID)
+                  </dt>
+                  <dd className="mt-1 font-mono text-sm text-gray-700 break-all">
+                    {userDetails.id}
+                  </dd>
+                </div>
+
+                {userDetails.createdAt && (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                      Member Since
+                    </dt>
+                    <dd className="mt-1 text-sm font-medium text-gray-700">
+                      {new Date(userDetails.createdAt).toLocaleDateString()}
+                    </dd>
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Session Security
+                  </dt>
+                  <dd className="mt-1 text-sm font-medium text-emerald-600 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Encrypted HTTP-Only Cookie Active
+                  </dd>
+                </div>
+              </dl>
+            )}
+          </div>
         </div>
       </main>
     </div>

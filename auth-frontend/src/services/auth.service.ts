@@ -1,20 +1,18 @@
 import apiClient from "../api/api-client";
-
 import type { ApiResponse } from "../types/api.types";
-
 import {
   type LoginRequest,
   type LoginData,
   type RegisterRequest,
-  type User,
+  type RegisterResponseData,
+  type ProfileResponseData,
 } from "../types/auth.types";
-
 import { setAccessToken } from "../auth/token-manager";
 
 export const registerUser = async (
   data: RegisterRequest,
-): Promise<ApiResponse<User>> => {
-  const response = await apiClient.post<ApiResponse<User>>(
+): Promise<ApiResponse<RegisterResponseData>> => {
+  const response = await apiClient.post<ApiResponse<RegisterResponseData>>(
     "/auth/register",
     data,
   );
@@ -33,8 +31,11 @@ export const loginUser = async (
   return response.data;
 };
 
-export const getProfile = async (): Promise<ApiResponse<User>> => {
-  const response = await apiClient.get<ApiResponse<User>>("/users/profile");
-  return response.data;
+export const logoutUser = async (): Promise<void> => {
+  await apiClient.post("/auth/logout");
 };
 
+export const getProfile = async (): Promise<ApiResponse<ProfileResponseData>> => {
+  const response = await apiClient.get<ApiResponse<ProfileResponseData>>("/users/profile");
+  return response.data;
+};

@@ -8,9 +8,12 @@ import userRoutes from "./routes/user.routes";
 import healthRoutes from "./routes/health.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
+import { globalRateLimiter } from "./middleware/rate-limit.middleware";
 import { env } from "./config/env";
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 const clientUrl = env.clientUrl;
 
@@ -26,6 +29,8 @@ app.use(
 );
 
 app.use(helmet());
+
+app.use(globalRateLimiter);
 
 app.use(
   express.json({
